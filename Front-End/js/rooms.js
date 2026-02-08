@@ -1,4 +1,4 @@
-const API_BASE = '/My_Cinema_Webacademie/Back-End/index.php';
+const API_BASE = '/Back-End/index.php';
 
 async function apiRequest(path, method = "GET", body = null) {
   const options = { method, headers: { "Content-Type": "application/json" } };
