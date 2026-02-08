@@ -1,50 +1,74 @@
 const API_BASE = '/My_Cinema_Webacademie/Back-End/index.php';
-const SCREENING_API = `${API_BASE}/api/screenings`;
 
-const screeningList = document.getElementById('list_screenings');
-const screeningForm = document.getElementById('form_screenings');
+async function apiRequest(path, method = "GET", body = null) {
+  const options = { method, headers: { "Content-Type": "application/json" } };
+  if (body) options.body = JSON.stringify(body);
 
-async function loadScreenings() {
-    const res = await fetch(SCREENING_API);
-    const screenings = await res.json();
-
-    screeningList.innerHTML = '';
-
-    screenings.forEach(s => {
-        const li = document.createElement('li');
-        li.textContent = `${s.id} — Movie ${s.movie_id}, Room ${s.room_id}, ${s.start_time}`;
-
-        const btn = document.createElement('button');
-        btn.textContent = 'Delete';
-        btn.className = 'delete-btn';
-        btn.onclick = () => deleteScreening(s.id);
-
-        li.appendChild(btn);
-        screeningList.appendChild(li);
-    });
+  const res = await fetch(API_BASE + "/api" + path, options);
+  if (!res.ok) throw new Error("API error");
+  return res.json();
 }
 
-screeningForm.addEventListener('submit', async e => {
-    e.preventDefault();
+function resetScreeningForm() {
+  ["screeningId", "screeningMovie", "screeningRoom", "screeningTime"]
+    .forEach(id => document.getElementById(id).value = "");
+}
 
-    const data = Object.fromEntries(new FormData(screeningForm));
+function fillScreeningForm(s) {
+  document.getElementById("screeningId").value = s.id ?? "";
+  document.getElementById("screeningMovie").value = s.movie_id ?? "";
+  document.getElementById("screeningRoom").value = s.room_id ?? "";
+  document.getElementById("screeningTime").value = s.start_time?.replace(" ", "T") ?? "";
+}
 
-    await fetch(SCREENING_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    });
+async function loadScreenings() {
+  const screenings = await apiRequest("/screenings");
 
-    screeningForm.reset();
-    loadScreenings();
-});
+  document.getElementById("screeningsTable").innerHTML = `
+    <table border="1">
+      <tr>
+        <th>ID</th><th>Movie</th><th>Room</th><th>Start time</th><th>Actions</th>
+      </tr>
+      ${screenings.map(s => `
+        <tr>
+          <td>${s.id}</td>
+          <td>${s.movie_id}</td>
+          <td>${s.room_id}</td>
+          <td>${s.start_time}</td>
+          <td>
+            <button onclick='fillScreeningForm(${JSON.stringify(s)})'>Edit</button>
+            <button onclick='deleteScreening(${s.id})'>Delete</button>
+          </td>
+        </tr>
+      `).join("")}
+    </table>
+  `;
+}
+
+async function saveScreening() {
+  const id = document.getElementById("screeningId").value.trim();
+
+  const payload = {
+    movie_id: Number(document.getElementById("screeningMovie").value),
+    room_id: Number(document.getElementById("screeningRoom").value),
+    start_time: document.getElementById("screeningTime").value.replace("T", " ")
+  };
+
+  if (!payload.movie_id || !payload.room_id || !payload.start_time) return;
+
+  if (id === "") {
+    await apiRequest("/screenings", "POST", payload);
+  } else {
+    await apiRequest(`/screenings/${id}`, "PUT", payload);
+  }
+
+  resetScreeningForm();
+  loadScreenings();
+}
 
 async function deleteScreening(id) {
-    await fetch(`${SCREENING_API}/${id}`, {
-        method: 'DELETE'
-    });
-
-    loadScreenings();
+  await apiRequest(`/screenings/${id}`, "DELETE");
+  loadScreenings();
 }
 
 loadScreenings();

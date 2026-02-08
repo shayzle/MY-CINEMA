@@ -1,50 +1,80 @@
 const API_BASE = '/My_Cinema_Webacademie/Back-End/index.php';
-const ROOM_API = `${API_BASE}/api/rooms`;
 
-const roomList = document.getElementById('list_rooms');
-const roomForm = document.getElementById('form_rooms');
+async function apiRequest(path, method = "GET", body = null) {
+  const options = { method, headers: { "Content-Type": "application/json" } };
+  if (body) options.body = JSON.stringify(body);
 
-async function loadRooms() {
-    const res = await fetch(ROOM_API);
-    const rooms = await res.json();
-
-    roomList.innerHTML = '';
-
-    rooms.forEach(room => {
-        const li = document.createElement('li');
-        li.textContent = `${room.id} — ${room.name} (${room.capacity})`;
-
-        const btn = document.createElement('button');
-        btn.textContent = 'Delete';
-        btn.className = 'delete-btn';
-        btn.onclick = () => deleteRoom(room.id);
-
-        li.appendChild(btn);
-        roomList.appendChild(li);
-    });
+  const res = await fetch(API_BASE + "/api" + path, options);
+  if (!res.ok) throw new Error("API error");
+  return res.json();
 }
 
-roomForm.addEventListener('submit', async e => {
-    e.preventDefault();
+function safeNumber(value) {
+  const n = Number(value);
+  return isNaN(n) ? null : n;
+}
 
-    const data = Object.fromEntries(new FormData(roomForm));
+function resetRoomForm() {
+  ["roomId", "roomName", "roomCapacity", "roomType"].forEach(
+    id => document.getElementById(id).value = ""
+  );
+}
 
-    await fetch(ROOM_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    });
+function fillRoomForm(room) {
+  document.getElementById("roomId").value = room.id ?? "";
+  document.getElementById("roomName").value = room.name ?? "";
+  document.getElementById("roomCapacity").value = room.capacity ?? "";
+  document.getElementById("roomType").value = room.type ?? "";
+}
 
-    roomForm.reset();
-    loadRooms();
-});
+async function loadRooms() {
+  const rooms = await apiRequest("/rooms");
+
+  document.getElementById("roomsTable").innerHTML = `
+    <table border="1">
+      <tr>
+        <th>ID</th><th>Name</th><th>Capacity</th><th>Type</th><th>Actions</th>
+      </tr>
+      ${rooms.map(r => `
+        <tr>
+          <td>${r.id}</td>
+          <td>${r.name}</td>
+          <td>${r.capacity}</td>
+          <td>${r.type ?? ""}</td>
+          <td>
+            <button onclick='fillRoomForm(${JSON.stringify(r)})'>Edit</button>
+            <button onclick='deleteRoom(${r.id})'>Delete</button>
+          </td>
+        </tr>
+      `).join("")}
+    </table>
+  `;
+}
+
+async function saveRoom() {
+  const id = document.getElementById("roomId").value.trim();
+
+  const payload = {
+    name: document.getElementById("roomName").value.trim(),
+    capacity: safeNumber(document.getElementById("roomCapacity").value),
+    type: document.getElementById("roomType").value.trim() || null
+  };
+
+  if (!payload.name || !payload.capacity) return;
+
+  if (id === "") {
+    await apiRequest("/rooms", "POST", payload);
+  } else {
+    await apiRequest(`/rooms/${id}`, "PUT", payload);
+  }
+
+  resetRoomForm();
+  loadRooms();
+}
 
 async function deleteRoom(id) {
-    await fetch(`${ROOM_API}/${id}`, {
-        method: 'DELETE'
-    });
-
-    loadRooms();
+  await apiRequest(`/rooms/${id}`, "DELETE");
+  loadRooms();
 }
 
 loadRooms();

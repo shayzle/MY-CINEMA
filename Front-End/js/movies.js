@@ -1,47 +1,109 @@
 const API_BASE = '/My_Cinema_Webacademie/Back-End/index.php';
-const MOVIE_API = `${API_BASE}/api/movies`;
 
-const movieList = document.getElementById('list_movies');
-const movieForm = document.getElementById('form_movies');
+async function apiRequest(path, method = "GET", body = null) {
+  const options = { method, headers: { "Content-Type": "application/json" } };
+  if (body) options.body = JSON.stringify(body);
 
-async function loadMovies() {
-    const res = await fetch(MOVIE_API);
-    const movies = await res.json();
-
-    movieList.innerHTML = '';
-
-    movies.forEach(movie => {
-        const li = document.createElement('li');
-        li.textContent = `${movie.id} — ${movie.title} (${movie.release_year})`;
-
-        const btn = document.createElement('button');
-        btn.textContent = 'Delete';
-        btn.className = 'delete-btn';
-        btn.onclick = () => deleteMovie(movie.id);
-
-        li.appendChild(btn);
-        movieList.appendChild(li);
-    });
+  const res = await fetch(API_BASE + "/api" + path, options);
+  if (!res.ok) throw new Error("API error");
+  return res.json();
 }
 
-movieForm.addEventListener('submit', async e => {
-    e.preventDefault();
+function safeNumber(value) {
+  const n = Number(value);
+  return isNaN(n) ? null : n;
+}
 
-    const data = Object.fromEntries(new FormData(movieForm));
+function setStatus(msg, error = false) {
+  const el = document.getElementById("status");
+  el.textContent = msg;
+  el.style.color = error ? "red" : "green";
+}
 
-    await fetch(MOVIE_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    });
+/* FORM HELPERS */
 
-    movieForm.reset();
-    loadMovies();
-});
+function resetMovieForm() {
+  ["movieId","movieTitle","movieDescription","movieDuration","movieYear","movieGenre","movieDirector"]
+    .forEach(id => document.getElementById(id).value = "");
+}
+
+function fillMovieForm(movie) {
+  document.getElementById("movieId").value = movie.id ?? "";
+  document.getElementById("movieTitle").value = movie.title ?? "";
+  document.getElementById("movieDescription").value = movie.description ?? "";
+  document.getElementById("movieDuration").value = movie.duration ?? "";
+  document.getElementById("movieYear").value = movie.release_year ?? "";
+  document.getElementById("movieGenre").value = movie.genre ?? "";
+  document.getElementById("movieDirector").value = movie.director ?? "";
+}
+
+/* LOAD MOVIES */
+
+async function loadMovies() {
+  try {
+    const movies = await apiRequest("/movies");
+
+    document.getElementById("badgeMovies").textContent = movies.length;
+
+    document.getElementById("moviesTable").innerHTML = `
+      <table border="1">
+        <tr>
+          <th>ID</th><th>Title</th><th>Duration</th><th>Year</th><th>Genre</th><th>Actions</th>
+        </tr>
+        ${movies.map(m => `
+          <tr>
+            <td>${m.id}</td>
+            <td>${m.title}</td>
+            <td>${m.duration}</td>
+            <td>${m.release_year}</td>
+            <td>${m.genre ?? ""}</td>
+            <td>
+              <button onclick='fillMovieForm(${JSON.stringify(m)})'>Edit</button>
+              <button onclick='deleteMovie(${m.id})'>Delete</button>
+            </td>
+          </tr>
+        `).join("")}
+      </table>
+    `;
+
+    setStatus("Movies loaded");
+  } catch (e) {
+    setStatus(e.message, true);
+  }
+}
+
+/* CRUD */
 
 async function deleteMovie(id) {
-    await fetch(`${MOVIE_API}/${id}`, { method: 'DELETE' });
-    loadMovies();
+  await apiRequest(`/movies/${id}`, "DELETE");
+  loadMovies();
+}
+
+async function saveMovie() {
+  const id = document.getElementById("movieId").value.trim();
+
+  const payload = {
+    title: document.getElementById("movieTitle").value.trim(),
+    description: document.getElementById("movieDescription").value.trim() || null,
+    duration: safeNumber(document.getElementById("movieDuration").value),
+    release_year: safeNumber(document.getElementById("movieYear").value),
+    genre: document.getElementById("movieGenre").value.trim() || null,
+    director: document.getElementById("movieDirector").value.trim() || null
+  };
+
+  if (!payload.title || !payload.duration) {
+    setStatus("Title & duration required", true);
+    return;
+  }
+
+  if (id === "") {
+    await apiRequest("/movies", "POST", payload);
+  } else {
+    await apiRequest(`/movies/${id}`, "PUT", payload);
+  }
+
+  resetMovieForm();
+  loadMovies();
 }
 
 loadMovies();
