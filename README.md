@@ -36,7 +36,7 @@ Default credentials:
 ## Launch
 Start your local server, then open:
 
-http://127.0.0.1:8888/My_Cinema_Webacademie/Front-End/index.html
+http://127.0.0.1:8888/MY-CINEMA/Front-End/index.html
 
 ---
 
