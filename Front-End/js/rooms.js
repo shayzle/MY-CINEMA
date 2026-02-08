@@ -1,8 +1,8 @@
 const API_BASE = '/My_Cinema_Webacademie/Back-End/index.php';
 const ROOM_API = `${API_BASE}/api/rooms`;
 
-const roomList = document.getElementById('room-list');
-const roomForm = document.getElementById('room-form');
+const roomList = document.getElementById('list_rooms');
+const roomForm = document.getElementById('form_rooms');
 
 async function loadRooms() {
     const res = await fetch(ROOM_API);

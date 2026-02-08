@@ -1,8 +1,8 @@
 const API_BASE = '/My_Cinema_Webacademie/Back-End/index.php';
 const SCREENING_API = `${API_BASE}/api/screenings`;
 
-const screeningList = document.getElementById('screening-list');
-const screeningForm = document.getElementById('screening-form');
+const screeningList = document.getElementById('list_screenings');
+const screeningForm = document.getElementById('form_screenings');
 
 async function loadScreenings() {
     const res = await fetch(SCREENING_API);

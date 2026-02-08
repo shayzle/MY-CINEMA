@@ -1,8 +1,8 @@
 const API_BASE = '/My_Cinema_Webacademie/Back-End/index.php';
 const MOVIE_API = `${API_BASE}/api/movies`;
 
-const movieList = document.getElementById('movie-list');
-const movieForm = document.getElementById('movie-form');
+const movieList = document.getElementById('list_movies');
+const movieForm = document.getElementById('form_movies');
 
 async function loadMovies() {
     const res = await fetch(MOVIE_API);
