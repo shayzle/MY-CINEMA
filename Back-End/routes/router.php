@@ -1,116 +1,168 @@
 <?php
 
-// connecting routes to controllers and actions
-// need to include this router.php file in index.php and to the controllers
-
-
 class Router {
 
-    public function match(string $method, string $url): ?array { // returns either an array or null
+    public function match(string $method, string $url): ?array {
 
-        $path = parse_url($url, PHP_URL_PATH); // get the path part of the URL
-
-        $path = str_replace('/My_Cinema_Web@cadémie/Back-End', '', $path); // adjust the base path according to your setup
-        $path = rtrim($path, '/'); // remove trailing slash for consistency
+        $path = parse_url($url, PHP_URL_PATH);
+        $path = rtrim($path, '/');
 
 
-        
+
         // MOVIES
 
-        // GET /controllers/movies --> pour tous les movies
-            if ($method === 'GET' && $path === '/controllers/movies') { // pour tous les movies without id
-                return [ // returning an array with controller, action and params
-                    'controller' => 'MovieController', 
-                    'action' => 'index', // action comes from the MovieController.php file
-                    'params' => [] // no parameters
-                ];
-            }
+        // GET all movies
+        if ($method === 'GET' && $path === '/api/movies') {
+            return [
+                'controller' => 'movieController',
+                'action' => 'index',
+                'params' => []
+            ];
+        }
 
-        // GET /controllers/movies/ --> pour un seul movie
-            if ($method === 'GET' && preg_match('#^/controllers/movies/(\d+)$#', $path, $matches)) { // pour un seul movie with id et preg_match to extract the id from the URL
-                return [ // returning an array with controller, action and params
-                    'controller' => 'MovieController',
-                    'action' => 'show',
-                    'params' => [(int) $matches[1]]
-                ];
-            }
+        // GET one movie
+        if ($method === 'GET' && preg_match('#^/api/movies/(\d+)$#', $path, $m)) {
+            return [
+                'controller' => 'movieController',
+                'action' => 'read',
+                'params' => [(int)$m[1]]
+            ];
+        }
 
-        // POST /controllers/movies --> pour ajouter un movie
-            if ($method === 'POST' && $path === '/controllers/movies') { // adding a movie without id
-                return [ // returning an array with controller, action and params
-                    'controller' => 'MovieController', 
-                    'action' => 'store',
-                    'params' => [json_decode(file_get_contents('php://input'), true)] // getting the input data from the request body to pass it to the controller and action to create a new movie because POST request has no URL parameters
-                ];
-            }
+        // POST movie
+        if ($method === 'POST' && $path === '/api/movies') {
+            return [
+                'controller' => 'movieController',
+                'action' => 'create',
+                'params' => [json_decode(file_get_contents('php://input'), true)]
+            ];
+        }
 
-        // PUT /controllers/movies/ --> pour modifier un movie
-            if ($method === 'PUT' && preg_match('#^/controllers/movies/(\d+)$#', $path, $matches)) { // preg_match to extract the id from the URL and update with id from the URL
-                return [
-                    'controller' => 'MovieController',
-                    'action' => 'update',
-                    'params' => [
-                        (int) $matches[1], // id from the URL
-                        json_decode(file_get_contents('php://input'), true) // input data from the request body
-                    ]
-                ];
-            }
+        // PUT movie
+        if ($method === 'PUT' && preg_match('#^/api/movies/(\d+)$#', $path, $m)) {
+            return [
+                'controller' => 'movieController',
+                'action' => 'update',
+                'params' => [
+                    (int)$m[1],
+                    json_decode(file_get_contents('php://input'), true)
+                ]
+            ];
+        }
 
-        // DELETE /controllers/movies/ --> pour supprimer un movie
-            if ($method === 'DELETE' && preg_match('#^/controllers/movies/(\d+)$#', $path, $matches)) { // delete with id from the URL
-                return [
-                    'controller' => 'MovieController',
-                    'action' => 'destroy',
-                    'params' => [(int) $matches[1]] // id from the URL
-                ];
-            }
+        // DELETE movie
+        if ($method === 'DELETE' && preg_match('#^/api/movies/(\d+)$#', $path, $m)) {
+            return [
+                'controller' => 'movieController',
+                'action' => 'delete',
+                'params' => [(int)$m[1]]
+            ];
+        }
 
 
 
         // ROOMS
 
-        // GET /controllers/rooms --> pour tous les rooms
-            if ($method === 'GET' && $path === '/controllers/rooms') {
-                return [
-                    'controller' => 'RoomController',
-                    'action' => 'index',
-                    'params' => []
-                ];
-            }
+        // GET all rooms
+        if ($method === 'GET' && $path === '/api/rooms') {
+            return [
+                'controller' => 'roomController',
+                'action' => 'index',
+                'params' => []
+            ];
+        }
 
-        // POST /controllers/rooms --> pour ajouter un room
-            if ($method === 'POST' && $path === '/controllers/rooms') {
-                return [
-                    'controller' => 'RoomController',
-                    'action' => 'store',
-                    'params' => [json_decode(file_get_contents('php://input'), true)]
-                ];
-            };
+        // GET one room
+        if ($method === 'GET' && preg_match('#^/api/rooms/(\d+)$#', $path, $m)) {
+            return [
+                'controller' => 'roomController',
+                'action' => 'read',
+                'params' => [(int)$m[1]]
+            ];
+        }
 
+        // POST room
+        if ($method === 'POST' && $path === '/api/rooms') {
+            return [
+                'controller' => 'roomController',
+                'action' => 'create',
+                'params' => [json_decode(file_get_contents('php://input'), true)]
+            ];
+        }
 
+        // PUT room
+        if ($method === 'PUT' && preg_match('#^/api/rooms/(\d+)$#', $path, $m)) {
+            return [
+                'controller' => 'roomController',
+                'action' => 'update',
+                'params' => [
+                    (int)$m[1],
+                    json_decode(file_get_contents('php://input'), true)
+                ]
+            ];
+        }
+
+        // DELETE room
+        if ($method === 'DELETE' && preg_match('#^/api/rooms/(\d+)$#', $path, $m)) {
+            return [
+                'controller' => 'roomController',
+                'action' => 'delete',
+                'params' => [(int)$m[1]]
+            ];
+        }
+
+        
 
         // SCREENINGS
 
-        // GET /controllers/screenings --> pour tous les screenings
-            if ($method === 'GET' && $path === '/controllers/screenings') {
-                return [
-                    'controller' => 'ScreeningController',
-                    'action' => 'index',
-                    'params' => []
-                ];
-            }
-
-        // POST /controllers/screenings --> pour ajouter un screening
-            if ($method === 'POST' && $path === '/controllers/screenings') {
-                return [
-                    'controller' => 'ScreeningController', // controller name and action name must match the actual class and method names
-                    'action' => 'store',
-                    'params' => [json_decode(file_get_contents('php://input'), true)]
-                ];
-            };
-
-
-        
-            return null;
+        // GET all screenings
+        if ($method === 'GET' && $path === '/api/screenings') {
+            return [
+                'controller' => 'screeningController',
+                'action' => 'index',
+                'params' => []
+            ];
         }
+
+        // GET one screening
+        if ($method === 'GET' && preg_match('#^/api/screenings/(\d+)$#', $path, $m)) {
+            return [
+                'controller' => 'screeningController',
+                'action' => 'read',
+                'params' => [(int)$m[1]]
+            ];
+        }
+
+        // POST screening
+        if ($method === 'POST' && $path === '/api/screenings') {
+            return [
+                'controller' => 'screeningController',
+                'action' => 'create',
+                'params' => [json_decode(file_get_contents('php://input'), true)]
+            ];
+        }
+
+        // PUT screening
+        if ($method === 'PUT' && preg_match('#^/api/screenings/(\d+)$#', $path, $m)) {
+            return [
+                'controller' => 'screeningController',
+                'action' => 'update',
+                'params' => [
+                    (int)$m[1],
+                    json_decode(file_get_contents('php://input'), true)
+                ]
+            ];
+        }
+
+        // DELETE screening
+        if ($method === 'DELETE' && preg_match('#^/api/screenings/(\d+)$#', $path, $m)) {
+            return [
+                'controller' => 'screeningController',
+                'action' => 'delete',
+                'params' => [(int)$m[1]]
+            ];
+        }
+
+        return null;
     }
+}

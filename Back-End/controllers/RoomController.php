@@ -1,39 +1,64 @@
-<?php 
+<?php
 
-class RoomController {
+class roomController {
 
-    private PDO $conn;
+    private roomModel $model;
 
-    public function __construct(PDO $db) {
-        $this->conn = $db; // controller must receive PDO via constructor
+    public function __construct(PDO $pdo) {
+        $this->model = new roomModel($pdo);
     }
 
-    // get all rooms (select all, CRUD Operation)
-        public function getAllRooms(): void {
-            $result = $this->conn->query("Select * FROM rooms");
-            echo json_encode($result->fetchAll());
+    // GET /api/rooms
+    public function index(): void {
+        echo json_encode($this->model->getAll());
+    }
+
+    // GET /api/rooms/{id}
+    public function read(int $id): void {
+        $room = $this->model->getById($id);
+
+        if (!$room) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Room not found']);
+            return;
         }
 
-    // create (CRUD Operation) -> POST (HTTP Method)
-        public function createRoom(array $input): void {
-            $stmt = $this->conn->prepare(
-                "INSERT INTO rooms (name, capacity, type, active)
-                VALUES (?, ?, ?, ?)"
-            );
-            $stmt->execute([
-                $input['name'],
-                $input['capacity'],
-                $input['type'] ?? null,
-                $input['active'] ?? true
-            ]);
-            http_response_code(201); // CReated
-            echo json_encode(["message" => "Room added successfully!"]);
+        echo json_encode($room);
+    }
+
+    // POST /api/rooms
+    public function create(array $data): void {
+        if (empty($data['name']) || empty($data['capacity'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Something is missing!!']);
+            return;
         }
 
+        $this->model->create($data);
+        http_response_code(201);
+        echo json_encode(['message' => 'Room created']);
+    }
+
+    // PUT /api/rooms/{id}
+    public function update(int $id, array $data): void {
+        if (empty($data['name']) || empty($data['capacity'])) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Something is missing!!']);
+            return;
+        }
+
+        $this->model->update($id, $data);
+        echo json_encode(['message' => 'Room updated']);
+    }
+
+    // DELETE /api/rooms/{id}
+    public function delete(int $id): void {
+        $this->model->delete($id);
+        echo json_encode(['message' => 'Room deleted']);
+    }
 }
-    
 
-    // id
-    // name
-    // capacity
-    // type
+// id
+// name
+// capacity
+// type

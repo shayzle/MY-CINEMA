@@ -1,34 +1,65 @@
 <?php
 
-class ScreeningModel {
+class screeningModel {
 
-    // Screening properties
-    public ?int $id;
-    public int $movie_id;
-    public int $room_id;
-    public string $start_time;
+    private PDO $db;
 
-    // Constructor
-    public function __construct(
-        ?int $id,
-        int $movie_id,
-        int $room_id,
-        string $start_time
-    ) {
-        // initialize properties
-        $this->id = $id;
-        $this->movie_id = $movie_id;
-        $this->room_id = $room_id;
-        $this->start_time = $start_time;
+    public function __construct(PDO $pdo) {
+        $this->db = $pdo;
     }
 
-    public static function fromArray(array $data): Screening {
-        // factory method to create a screening instance from an associative array
-        return new Screening(
-            $data['id'] ?? null,
+    // GET all screenings
+    public function getAll(): array {
+        $stmt = $this->db->prepare("SELECT * FROM screenings");
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    // GET one screening
+    public function getById(int $id): ?array {
+        $stmt = $this->db->prepare("SELECT * FROM screenings WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch() ?: null;
+    }
+
+    // CREATE screening
+    public function create(array $data): bool {
+        $stmt = $this->db->prepare(
+            "INSERT INTO screenings (movie_id, room_id, start_time)
+             VALUES (?, ?, ?)"
+        );
+
+        return $stmt->execute([
             $data['movie_id'],
             $data['room_id'],
             $data['start_time']
+        ]);
+    }
+
+    // UPDATE screening
+    public function update(int $id, array $data): bool {
+        $stmt = $this->db->prepare(
+            "UPDATE screenings
+             SET movie_id = ?, room_id = ?, start_time = ?
+             WHERE id = ?"
         );
+
+        return $stmt->execute([
+            $data['movie_id'],
+            $data['room_id'],
+            $data['start_time'],
+            $id
+        ]);
+    }
+
+    // DELETE screening
+    public function delete(int $id): bool {
+        $stmt = $this->db->prepare("DELETE FROM screenings WHERE id = ?");
+        return $stmt->execute([$id]);
     }
 }
+
+// $id
+// movie_id
+// room_id
+// start_time

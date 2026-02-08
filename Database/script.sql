@@ -13,6 +13,7 @@ CREATE TABLE movies (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(100) NOT NULL,
     description TEXT,
+    duration INT NOT NULL,
     release_year INT NOT NULL,
     genre VARCHAR(100),
     director VARCHAR(100),
@@ -59,11 +60,11 @@ CREATE TABLE screenings (
 
 USE my_cinema;
 
-INSERT INTO movies (title, release_year, genre, director)
+INSERT INTO movies (title, duration, release_year, genre, director)
 VALUES
-('Ponyo', 2008, 'Fantasy', 'Hayao Miyazaki'),
-('Castle in the Sky', 1986, 'Adventure', 'Hayao Miyazaki'),
-('My Neighbor Totoro', 1988, 'Fantasy', 'Hayao Miyazaki');
+('Ponyo', 101, 2008, 'Fantasy', 'Hayao Miyazaki'),
+('Castle in the Sky', 124, 1986, 'Adventure', 'Hayao Miyazaki'),
+('My Neighbor Totoro', 86, 1988, 'Fantasy', 'Hayao Miyazaki');
 
 INSERT INTO rooms (name, capacity, type)
 VALUES
